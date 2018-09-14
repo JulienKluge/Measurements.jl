@@ -22,6 +22,10 @@ export roundedmeasurementstr
 export MeasurementDisplayMode
 export DisplayTwoDigits, DisplayOneDigit, DisplayScientific, DisplayScientificConst, DisplayFull
 
+function fpformat(s::String, x::AbstractFloat)
+	@eval(@sprintf($s, $x))
+end
+
 #=
 	flterrorresistant_roundup(num::T, sdigits::Int, flterroracceptance = 1.0e-14)
 	roundedvalue
@@ -50,16 +54,6 @@ const DisplayScientificConst = MeasurementDisplayMode{:ScientificConst}()
 const DisplayFull = MeasurementDisplayMode{:Full}()
 
 
-#dirty hack to check if a number was formatted as exponential before padding
-#TODO: find a way of forcing julia to format a float in a decimal string always
-function rpad_notexp(str::String, count::Int) #rpad's with a string with "0", except it containing "e" to exclude exponentials
-	if occursin("e", str)
-		str
-	else
-		rpad(str, count, "0")
-	end
-end
-
 #the power string to append
 function composepowerstring(power::Int)
 	power > 0  ? " * 10^$power" : " * 10^($power)"
@@ -75,10 +69,12 @@ function composereg_rndstr(value::T, error::T, significantDgt::Int, firstValueDi
 	value = round(value, RoundNearestTiesUp, sigdigits = significantDgt + valueSignificantModifier)
 	error = round(error, RoundUp, sigdigits = significantDgt) #errors are rounded up by default
 
-	valueString = string(value)
-	errorString = string(error)
-	valueString = rpad_notexp(valueString, significantDgt + firstValueDigit + 2) #add trailing zeros
-	errorString = rpad_notexp(errorString, significantDgt + firstErrorDigit + 2) #add trailing zeros
+	#valueString = string(value)
+	#errorString = string(error)
+	#valueString = rpad_notexp(valueString, significantDgt + firstValueDigit + 2) #add trailing zeros
+	#errorString = rpad_notexp(errorString, significantDgt + firstErrorDigit + 2) #add trailing zeros
+	valueString = fpformat("%.$(significantDgt + abs(firstValueDigit) + 1 - valueSignificantModifier)f", value)
+	errorString = fpformat("%.$(significantDgt + abs(firstErrorDigit) - 1)f", error)
 
 	signString = negative ? "-" : ""
 	if power == 0
