@@ -27,6 +27,8 @@ using Calculus
 # Functions provided by this package and exposed to users
 export Measurement, measurement, ±
 
+export roundedmeasurementstr
+
 # Define the "Derivatives" type, used inside "Measurement" type.  This should be
 # a lightweight and immutable dictionary.
 include("derivatives-type.jl")
@@ -99,8 +101,8 @@ The binary operator `±` is equivalent to `measurement`, so you can construct a
 measurement
 
 # Type representation
-Base.show(io::IO, measure::Measurement) =
-    print(io, measure.val, get(io, :compact, false) ? "±" : " ± ", measure.err)
+Base.show(io::IO, measure::Measurement) = print(io, roundedmeasurementstr(measure))
+    #print(io, measure.val, get(io, :compact, false) ? "±" : " ± ", measure.err)
 Base.show(io::IO, ::MIME"text/latex", measure::Measurement) =
     print(io, "\$", measure.val, " \\pm ", measure.err, "\$")
 for mime in (MIME"text/x-tex", MIME"text/x-latex")
@@ -156,5 +158,6 @@ include("utils.jl")
 include("math.jl")
 include("parsing.jl")
 include("plot-recipes.jl")
+include("rounding.jl")
 
 end # module
